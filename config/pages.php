@@ -9,7 +9,7 @@
 /**
  * Default title for the each page. This will ususally be your site name.
  */
-$config['title'] = 'Blank Page';
+$config['title'] = 'Untitled Page';
 
 /**
  * Title seperator
