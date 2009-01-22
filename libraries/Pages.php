@@ -34,7 +34,7 @@ class Pages_Core {
 	protected $eol           = "\r\n"; // Windows compatible line breaking
 	protected $version; // Version number to append to end of JS and CSS files to combat caching
 	
-	// Cache Externals
+	// Cache Externals	
 	protected $cache_css_exists = false;
 	protected $cache_js_exists  = false;
 	protected $cache_css_key;
@@ -50,7 +50,11 @@ class Pages_Core {
 		'data' => '',
 		'file' => ''
 	);
+	
+	protected $css_cache_list = array();
+	protected $js_cache_list  = array();
 
+	// Cache Externals Temporary Containers
 	protected $cache_container_css = '';
 	protected $cache_container_js  = '';
 	
@@ -151,6 +155,10 @@ class Pages_Core {
 		// Set cache defult
 		if ($cache === null && Kohana::config('pages.cache_externals') === true)
 		{
+			$cache_list = $type.'_cache_list';
+			$list = &$this->$cache_list;
+			$list[$file] = true;
+
 			$cache = true;
 		}
 		elseif ($cache === null)
@@ -219,8 +227,8 @@ class Pages_Core {
 		
 		if (Kohana::config('pages.cache_externals'))
 		{
-			$this->cache_css_key = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->css)));
-			$this->cache_js_key  = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->js)));
+			$this->cache_css_key = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->css_cache_list)));
+			$this->cache_js_key  = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->js_cache_list)));
 			
 			$this->cache_css_exists = $this->cacheExists('css', $this->cache_css_key);
 			$this->cache_js_exists  = $this->cacheExists('js', $this->cache_js_key);
@@ -229,11 +237,11 @@ class Pages_Core {
 		$head = '';
 
 		// Add regular css
-		foreach ($this->css as $key => $css)
+		foreach ($this->css as $css)
 		{
 			if ($css['cache'] === true && $this->cache_css_exists === false)
 			{
-				$this->fileCombine('css', $key);
+				$this->fileCombine('css', $css['file']);
 			}
 			elseif ($css['cache'] === false)
 			{
@@ -246,6 +254,8 @@ class Pages_Core {
 		{
 			if ($this->cache_css['data'] === '' || $this->cache_css['data'] === null)
 			{
+				$this->removeExpiredCache('css');
+				
 				$cache = $this->setCache('css', $this->cache_css_key, $this->cache_container_css);
 
 				$head .= '<link rel="stylesheet" href="'.$this->css_url.$cache['filename'].'" type="text/css" />'.$eol;
@@ -265,7 +275,37 @@ class Pages_Core {
 		// Add regular js
 		foreach ($this->js as $js)
 		{
-			$head .= '<script type="text/javascript" src="'.$js['file'].'"></script>'.$eol;
+			if ($js['cache'] === true && $this->cache_js_exists === false)
+			{
+				$this->fileCombine('js', $js['file']);
+			}
+			elseif ($js['cache'] === false)
+			{
+				$head .= '<script type="text/javascript" src="'.$js['file'].'"></script>'.$eol;
+			}
+		}
+		
+		// Add Cached JS
+		if ($this->cache_container_js != '')
+		{
+			if ($this->cache_js['data'] === '' || $this->cache_js['data'] === null)
+			{
+				$this->removeExpiredCache('js');
+				
+				$cache = $this->setCache('js', $this->cache_js_key, $this->cache_container_js);
+				
+				$head .= '<script type="text/javascript" src="'.$this->js_url.$cache['filename'].'"></script>'.$eol;
+			}
+			else
+			{
+				$filename = str_replace(realpath(Kohana::config('pages.js_path')).'/', '', $this->cache_js['file']);
+		
+				$head .= '<script type="text/javascript" src="'.$this->js_url.$filename.'.js"></script>'.$eol;
+			}
+		}
+		elseif ($this->cache_js_exists === true)
+		{
+			$head .= '<script type="text/javascript" src="'.$this->js_url.$this->cache_js_key.'.js"></script>'.$eol;
 		}
 
 		// Add raw js
@@ -361,15 +401,13 @@ class Pages_Core {
 		echo $output;
 	}
 	
-	private function fileCombine($type, $script_key)
+	private function fileCombine($type, $file)
 	{
 		$exists    = 'cache_'.$type.'_exists';
 		$cache     = 'cache_'.$type;
 		$key       = 'cache_'.$type.'_key';
 		$path      = Kohana::config('pages.'.$type.'_path');
 		$container = 'cache_container_'.$type;
-
-		//$this->$key = is_null($this->$key) ? '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->$type))) : $this->$key;
 
 		if ($this->$exists === false)
 		{
@@ -386,10 +424,13 @@ class Pages_Core {
 				$output = false;
 			
 				// Open actual file to load it into our container
-				if (file_exists($path.$script_key.'.'.$type))
-				{
-					$output = file_get_contents($path.$script_key.'.'.$type);
-				}
+				// Use cURL incase it's an external file
+		    	$ch = curl_init();
+		    	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		    	curl_setopt($ch, CURLOPT_HEADER, 0);
+		    	curl_setopt($ch, CURLOPT_URL, $file);
+		    	$output = curl_exec($ch);
+		    	curl_close($ch);
 			
 			    if ($output !== false)
 			    {
@@ -441,6 +482,11 @@ class Pages_Core {
 		}
 		
 		return array('data' => null, 'file' => $key.'.'.$type);
+	}
+	
+	private function removeExpiredCache($type)
+	{
+		
 	}
 	
 	private function setCache($type, $key, $data)
