@@ -109,7 +109,7 @@ class page_Core {
 	}
 	
 	/**
-	 * Returns minfied js
+	 * Returns minified js
 	 *
 	 * @param   string        script to minify
 	 * @return  string        minified version

@@ -34,6 +34,26 @@ class Pages_Core {
 	protected $eol           = "\r\n"; // Windows compatible line breaking
 	protected $version; // Version number to append to end of JS and CSS files to combat caching
 	
+	// Cache Externals
+	protected $cache_css_exists = false;
+	protected $cache_js_exists  = false;
+	protected $cache_css_key;
+	protected $cache_js_key;
+
+	protected $cache_css = array
+	(
+		'data' => '',
+		'file' => ''
+	);
+	protected $cache_js = array
+	(
+		'data' => '',
+		'file' => ''
+	);
+
+	protected $cache_container_css = '';
+	protected $cache_container_js  = '';
+	
 	/**
 	 * Returns a singleton instance of URI.
 	 *
@@ -52,7 +72,7 @@ class Pages_Core {
 		return $instance;
 	}
 
-	public function __construct($i18n = false)
+	public function __construct()
 	{					
 		// Setup <head> variables from config file
 		$this->title[]         = Kohana::config('pages.title');
@@ -67,6 +87,8 @@ class Pages_Core {
 		$this->css_url = ((substr($this->css_url, -1) != '/') ? $this->css_url.'/' : $this->css_url);
 		$this->js_url = ((substr($this->js_url, -1) != '/') ? $this->js_url.'/' : $this->js_url);
 		
+		// Setup misc switches and vars
+		$this->cache_externals = Kohana::config('pages.cache_externals');
 		$this->version = (Kohana::config('pages.version') ? '?'.Kohana::config('pages.version') : '');
 	}
 
@@ -124,8 +146,18 @@ class Pages_Core {
 	 * @param   boolean       embed the script or link to it
 	 * @return  void
 	 */
-	protected function addScript($type, $file, $cache = false, $embed = false)
+	protected function addScript($type, $file, $cache = null)
 	{
+		// Set cache defult
+		if ($cache === null && Kohana::config('pages.cache_externals') === true)
+		{
+			$cache = true;
+		}
+		elseif ($cache === null)
+		{
+			$cache = false;
+		}
+	
 		$url = $type.'_url';
 		$scripts = &$this->$type;
 		
@@ -145,9 +177,9 @@ class Pages_Core {
 		$scripts[$file]['cache'] = (bool) $cache;
 	}
 	
-	public function addCSS($file, $cache = false, $embed = false)
+	public function addCSS($file, $cache = null)
 	{
-		$this->addScript('css', $file, $cache, $embed);
+		$this->addScript('css', $file, $cache);
 	}
 	
 	public function removeCSS($script)
@@ -160,9 +192,9 @@ class Pages_Core {
 		$this->css = array();
 	}
 	
-	public function addJS($file, $cache = false, $embed = false)
+	public function addJS($file, $cache = null)
 	{
-		$this->addScript('js', $file, $cache, $embed);
+		$this->addScript('js', $file, $cache);
 	}
 	
 	public function removeJS($script)
@@ -181,17 +213,53 @@ class Pages_Core {
 	}
 	
 	private function buildCSSAndJS()
-	{	
+	{
 		// Make the eol a local variable for less typing
 		$eol = $this->eol;
-
+		
+		if (Kohana::config('pages.cache_externals'))
+		{
+			$this->cache_css_key = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->css)));
+			$this->cache_js_key  = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->js)));
+			
+			$this->cache_css_exists = $this->cacheExists('css', $this->cache_css_key);
+			$this->cache_js_exists  = $this->cacheExists('js', $this->cache_js_key);
+		}
+		
 		$head = '';
 
 		// Add regular css
-		foreach ($this->css as $css)
+		foreach ($this->css as $key => $css)
 		{
-			// TODO: Add in embedding of CSS code
-			$head .= '<link rel="stylesheet" href="'.$css['file'].'" type="text/css" />'.$eol;
+			if ($css['cache'] === true && $this->cache_css_exists === false)
+			{
+				$this->fileCombine('css', $key);
+			}
+			elseif ($css['cache'] === false)
+			{
+				$head .= '<link rel="stylesheet" href="'.$css['file'].'" type="text/css" />'.$eol;
+			}
+		}
+
+		// Add Cached CSS
+		if ($this->cache_container_css != '')
+		{
+			if ($this->cache_css['data'] === '' || $this->cache_css['data'] === null)
+			{
+				$cache = $this->setCache('css', $this->cache_css_key, $this->cache_container_css);
+
+				$head .= '<link rel="stylesheet" href="'.$this->css_url.$cache['filename'].'" type="text/css" />'.$eol;
+			}
+			else
+			{
+				$filename = str_replace(realpath(Kohana::config('pages.css_path')).'/', '', $this->cache_css['file']);
+		
+				$head .= '<link rel="stylesheet" href="'.$this->css_url.$filename.'" type="text/css" />'.$eol;
+			}
+		}
+		elseif ($this->cache_css_exists === true)
+		{
+			$head .= '<link rel="stylesheet" href="'.$this->css_url.$this->cache_css_key.'.css'.'" type="text/css" />'.$eol;
 		}
 
 		// Add regular js
@@ -293,6 +361,48 @@ class Pages_Core {
 		echo $output;
 	}
 	
+	private function fileCombine($type, $script_key)
+	{
+		$exists    = 'cache_'.$type.'_exists';
+		$cache     = 'cache_'.$type;
+		$key       = 'cache_'.$type.'_key';
+		$path      = Kohana::config('pages.'.$type.'_path');
+		$container = 'cache_container_'.$type;
+
+		//$this->$key = is_null($this->$key) ? '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->$type))) : $this->$key;
+
+		if ($this->$exists === false)
+		{
+			// If we haven't attempted loading the css cache, try to get it
+			$cur_cache = $this->$cache;
+			if ($cur_cache['data'] === '')
+			{
+				$this->$cache = $this->getCache($type, $this->$key);
+			}
+			
+			$cur_cache = $this->$cache;
+			if ($cur_cache['data'] === null)
+			{
+				$output = false;
+			
+				// Open actual file to load it into our container
+				if (file_exists($path.$script_key.'.'.$type))
+				{
+					$output = file_get_contents($path.$script_key.'.'.$type);
+				}
+			
+			    if ($output !== false)
+			    {
+			    	$this->$container = $this->$container."\n".$output;
+			    }
+			}
+			else
+			{
+				$this->$container = $this->$cache;
+			}
+		}
+	}
+	
 	private function formatHTML($output, $format = false)
 	{
 		$format = (($format) ? $format : $this->format_output);
@@ -309,5 +419,49 @@ class Pages_Core {
 		}
 		
 		return $output;
+	}
+	
+	private function cacheExists($type, $key)
+	{
+		return (bool) file_exists(Kohana::config('pages.'.$type.'_path').$key.'.'.$type);
+	}
+	
+	private function getCache($type, $key)
+	{
+		$data = false;
+
+		if (file_exists(Kohana::config('pages.'.$type.'_path').$key.'.'.$type))
+		{
+			$data = file_get_contents(Kohana::config('pages.'.$type.'_path').$key.'.'.$type);
+		}
+		
+		if ($data !== false)
+		{
+			return array('data' => $data, 'file' => $key.'.'.$type);
+		}
+		
+		return array('data' => null, 'file' => $key.'.'.$type);
+	}
+	
+	private function setCache($type, $key, $data)
+	{
+		$filename = $key.'.'.$type;
+		
+		if (Kohana::config('pages.format_output') === 'compress')
+		{
+			switch (true)
+			{
+				case ($type === 'js'):
+					$data = page::minifyJS($data);
+					break;
+				case ($type === 'css'):
+					$data = page::compressCSS($data);
+					break;
+			}
+		}		
+		
+		$put = (bool) file_put_contents(Kohana::config('pages.'.$type.'_path').$filename, $data);
+	
+		return array('put' => $put, 'filename' => $filename);
 	}
 }

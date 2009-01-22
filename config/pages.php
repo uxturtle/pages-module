@@ -9,7 +9,7 @@
 /**
  * Default title for the each page. This will ususally be your site name.
  */
-$config['title'] = 'Untitled Page';
+$config['title'] = 'Blank Page';
 
 /**
  * Title seperator
@@ -35,27 +35,37 @@ $config['format_output'] = (IN_PRODUCTION ? 'compress' : 'none');
  * automatically be minified together and cached as one file. You can override this at any time by
  * passing true or false as the second parameter when adding a script.
  */
-$config['cache_scripts'] = FALSE;
+$config['cache_externals'] = TRUE;
 
 /**
  * CSS url as you would normally use it in HTML
  */
-$config['css_url'] = '/css/';
+$config['css_url'] = 'http://dev.ext.youversion.com/css/';
 
 /**
  * File path to your css folder (relative to index.php) with a trailing slash.
  */
-$config['css_path'] = 'css/';
+$config['css_path'] = '../../ext/html/css/';
+
+/**
+ * Image url as you would normally use it in HTML
+ */
+$config['img_url'] = 'http://dev.ext.youversion.com/img/';
+
+/**
+ * File path to your img folder (relative to index.php) with a trailing slash.
+ */
+$config['img_path'] = 'img/';
 
 /**
  * Javascript url as you would normally use it in HTML
  */
-$config['js_url'] = '/js/';
+$config['js_url'] = 'http://dev.ext.youversion.com/js/';
 
 /**
  * File path to your js folder (relative to index.php) with a trailing slash.
  */
-$config['js_path'] = 'js/';
+$config['js_path'] = '../../ext/html/js/';
 
 /**
  * Version number to append to end of JS and CSS files to combat caching
