@@ -91,6 +91,9 @@ class Pages_Core {
 		$this->css_url = ((substr($this->css_url, -1) != '/') ? $this->css_url.'/' : $this->css_url);
 		$this->js_url = ((substr($this->js_url, -1) != '/') ? $this->js_url.'/' : $this->js_url);
 		
+		$this->css_path = Kohana::config('pages.css_path');
+		$this->js_path  = Kohana::config('pages.js_path');
+		
 		// Setup misc switches and vars
 		$this->cache_externals = Kohana::config('pages.cache_externals');
 		$this->version = (Kohana::config('pages.version') ? '?'.Kohana::config('pages.version') : '');
@@ -227,8 +230,8 @@ class Pages_Core {
 		
 		if (Kohana::config('pages.cache_externals'))
 		{
-			$this->cache_css_key = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->css_cache_list)));
-			$this->cache_js_key  = '_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->js_cache_list)));
+			$this->cache_css_key = '_pages_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->css_cache_list)));
+			$this->cache_js_key  = '_pages_'.Kohana::config('pages.version').'_'.md5(implode('', array_keys($this->js_cache_list)));
 			
 			$this->cache_css_exists = $this->cacheExists('css', $this->cache_css_key);
 			$this->cache_js_exists  = $this->cacheExists('js', $this->cache_js_key);
@@ -486,7 +489,27 @@ class Pages_Core {
 	
 	private function removeExpiredCache($type)
 	{
-		
+		$type_path = $type.'_path';
+		$version   = Kohana::config('pages.version');
+
+		if (is_dir($this->$type_path))
+		{
+		    if ($dir = opendir($this->$type_path))
+		    {
+		        while (($file = readdir($dir)) !== false)
+		        {
+		        	// Look for the version number in the filename
+		        	preg_match('/^_pages_(\d+)_(?:.*)/', $file, $matches);
+
+					if (isset($matches[1]) && is_numeric($matches[1]) && ((int) $version !== (int) $matches[1]))
+					{
+						unlink($this->$type_path.$file);
+					}
+		        }
+				
+				closedir($dir);
+		    }
+		}
 	}
 	
 	private function setCache($type, $key, $data)

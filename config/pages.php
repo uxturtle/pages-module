@@ -70,4 +70,4 @@ $config['js_path'] = '../../ext/html/js/';
 /**
  * Version number to append to end of JS and CSS files to combat caching
  */
-$config['version'] = '1';
+$config['version'] = 1;
