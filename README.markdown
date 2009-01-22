@@ -4,4 +4,4 @@ This is a simple module for [Kohana PHP](http://kohanaphp.com) (an awesome PHP5 
 
 Documentation is still lacking, but I hope to get it done soon.
 
-If you have any questions or start using Pages, please [send me an email](sam@samsoff.es).
+If you have any questions or start using Pages, please [send me an email](mailto:sam@samsoff.es).
