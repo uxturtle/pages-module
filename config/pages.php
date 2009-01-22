@@ -3,6 +3,7 @@
  * @package	   Pages Module
  * @author     Sam Soffes
  * @author     Josh Turmel
+ *
  * @copyright  (c) 2007-2009 LifeChurch.tv
  */
  
