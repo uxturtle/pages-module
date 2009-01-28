@@ -1,11 +1,10 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 /**
  * Page Helper
  *
  * @package	   Pages Module
  * @author     Sam Soffes
  * @author     Josh Turmel
- * @copyright  (c) 2007-2009 LifeChurch.tv
  */
 class page_Core {
 

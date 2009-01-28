@@ -3,13 +3,12 @@
  * @package	   Pages Module
  * @author     Sam Soffes
  * @author     Josh Turmel
- * @copyright  (c) 2007-2009 LifeChurch.tv
  */
  
 /**
  * Default title for the each page. This will ususally be your site name.
  */
-$config['title'] = 'Blank Page';
+$config['title'] = 'Untitled Page';
 
 /**
  * Title seperator
@@ -40,32 +39,22 @@ $config['cache_externals'] = TRUE;
 /**
  * CSS url as you would normally use it in HTML
  */
-$config['css_url'] = 'http://dev.ext.youversion.com/css/';
+$config['css_url'] = '/css/';
 
 /**
  * File path to your css folder (relative to index.php) with a trailing slash.
  */
-$config['css_path'] = '../../ext/html/css/';
-
-/**
- * Image url as you would normally use it in HTML
- */
-$config['img_url'] = 'http://dev.ext.youversion.com/img/';
-
-/**
- * File path to your img folder (relative to index.php) with a trailing slash.
- */
-$config['img_path'] = 'img/';
+$config['css_path'] = 'css/';
 
 /**
  * Javascript url as you would normally use it in HTML
  */
-$config['js_url'] = 'http://dev.ext.youversion.com/js/';
+$config['js_url'] = '/js/';
 
 /**
  * File path to your js folder (relative to index.php) with a trailing slash.
  */
-$config['js_path'] = '../../ext/html/js/';
+$config['js_path'] = 'js/';
 
 /**
  * Version number to append to end of JS and CSS files to combat caching
