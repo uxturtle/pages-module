@@ -14,5 +14,5 @@ $config['allowed_filetypes'] = array
 	'htm', 'html',
 	'css',
 	'js',
-	'markdown'
+	'markdown', 'mdown', 'md'
 );

@@ -39,7 +39,7 @@ class page_Core {
 		$output = $view->render();
 		
 		// Convert to markdown automatically
-		if ($type == 'markdown')
+		if ($type == 'markdown' || $type == 'mdown' || $type == 'md')
 		{
 			$output = markdown::to_html($output);
 		}
