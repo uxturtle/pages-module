@@ -13,11 +13,12 @@ class page_Core {
 	 *
 	 * @param   string        name of view
 	 * @param   boolean|array optional array of data to pass to the view
+	 * @param   string        file extension
 	 * @param   boolean|int   lifetime of cache. if set to true it will use the default
 	 *                            cache from the pages config or use an int if it is passed one
 	 * @return  string        contents of view or cache file
 	 */
-	public static function view($view, $config = false, $lifetime = false)
+	public static function view($view, $config = FALSE, $type = FALSE, $lifetime = FALSE)
 	{
 		$page = Pages::instance();
 	
@@ -25,7 +26,7 @@ class page_Core {
 		if ($lifetime)
 		{
 			$cache = new Cache;
-			$cache_name = $page->getCacheIdForView($view.serialize($data));
+			$cache_name = $page->getCacheIdForView($view.$type.serialize($data));
 
 			if ($output = $cache->get($cache_name))
 			{
@@ -34,25 +35,30 @@ class page_Core {
 		}
 
 		// Load the view
-		$view = new View($view);
-		$view->set($config);
+		$view = new View($view, $config, $type);
 		$output = $view->render();
+		
+		// Convert to markdown automatically
+		if ($type == 'markdown')
+		{
+			$output = markdown::to_html($output);
+		}
 
 		// Store into cache
 		if ($lifetime)
 		{
 			// Setup lifetime
-			if ($lifetime === true)
+			if ($lifetime === TRUE)
 			{
 				$lifetime = $page->cache_lifetime;
-
-			} else {
-
+			}
+			else
+			{
 				$lifetime = (int) $lifetime;
 			}
 
 			// Store the cache
-			$cache->set($cache_name, $output, null, $lifetime);
+			$cache->set($cache_name, $output, NULL, $lifetime);
 		}
 
 		return $output;
@@ -74,8 +80,8 @@ class page_Core {
 	public static function indent($input)
 	{
 		$xml = new DOMDocument;
-		$xml->preserveWhiteSpace = false;
-		$xml->formatOutput = true;
+		$xml->preserveWhiteSpace = FALSE;
+		$xml->formatOutput = TRUE;
 		$xml->loadXML($input);
 		$output = substr($xml->saveXML(), 22); // Strip the <?xml> at the beginning
 		$output = str_replace('<![CDATA[', '//<![CDATA[', $output);
