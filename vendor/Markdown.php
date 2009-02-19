@@ -1,4 +1,4 @@
-<?php defined('SYSPATH') or die('No direct script access.');
+<?php
 #
 # Markdown Extra  -  A text-to-HTML conversion tool for web writers
 #

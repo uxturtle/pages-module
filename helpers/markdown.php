@@ -11,7 +11,25 @@ class markdown_Core {
 
 	public static function to_html($string)
 	{
-		$markdown = new Markdown_Parser;
+		$markdown = new MarkdownExtra_Parser;
 		return '<div class="markdown">'.$markdown->transform($string).'</div>';
+	}
+	
+	public static function anchor($uri, $title = NULL, $protocol = NULL)
+	{
+		if ($uri === '')
+		{
+			$site_url = url::base(FALSE);
+		}
+		elseif (strpos($uri, '://') === FALSE AND strpos($uri, '#') !== 0)
+		{
+			$site_url = url::site($uri, $protocol);
+		}
+		else
+		{
+			$site_url = $uri;
+		}
+
+		return '['.(($title === NULL) ? $site_url : $title).']('.$site_url.')';
 	}
 }
