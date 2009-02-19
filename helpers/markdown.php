@@ -15,6 +15,7 @@ class markdown_Core {
 		return '<div class="markdown">'.$markdown->transform($string).'</div>';
 	}
 	
+	// Easily create links in markdown
 	public static function anchor($uri, $title = NULL, $protocol = NULL)
 	{
 		if ($uri === '')
