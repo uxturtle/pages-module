@@ -123,9 +123,9 @@ class Pages_Core {
 		return 'page_view_'.(($this->lang) ? $this->lang.'_' : '').md5(url::current().$name);
 	}
 		
-	public function addLink($rel, $type, $href, $title = FALSE) {
+	public function addLink($rel, $href, $type = FALSE, $title = FALSE) {
 		// By using href as key, it allows us to override in extended controllers.
-		$this->link[$href] = '<link href="'.$href.'" rel="'.$rel.'" title="'.$title.'"'.(($type) ? ' type="'.$type.'"' : '').' />';
+		$this->link[md5($rel.$href.$type.$title)] = '<link rel="'.$rel.'" href="'.$href.'" '.($title !== FALSE ? 'title="'.$title.'" ' : '').($type !== FALSE ? 'type="'.$type.'" ' : '').'/>';
 	}
 	
 	public function addOpenSearch($href, $title = FALSE)
