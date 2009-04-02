@@ -15,7 +15,7 @@ class Pages_Core {
 	protected $title        = array();
 	protected $title_rev    = FALSE;
 	protected $title_sep;
-	
+
 	// Head pieces
 	protected $meta         = array();
 	protected $link         = array();
@@ -80,6 +80,7 @@ class Pages_Core {
 		// Setup <head> variables from config file
 		$this->title[]         = Kohana::config('pages.title');
 		$this->title_sep       = Kohana::config('pages.title_seperator');
+		$this->title_rev       = Kohana::config('pages.title_reverse');
 		$this->css_url         = Kohana::config('pages.css_url');
 		$this->js_url          = Kohana::config('pages.js_url');
 		$this->template        = Kohana::config('pages.template');

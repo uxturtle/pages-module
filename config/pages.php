@@ -11,6 +11,11 @@
 $config['title'] = 'Untitled Page';
 
 /**
+ * Reverse order of title sections
+ */
+$config['title_reverse'] = true;
+
+/**
  * Title seperator
  */
 $config['title_seperator'] = ' - ';
