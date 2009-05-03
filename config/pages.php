@@ -13,7 +13,7 @@ $config['title'] = 'Untitled Page';
 /**
  * Reverse order of title sections
  */
-$config['title_reverse'] = true;
+$config['title_reverse'] = FALSE;
 
 /**
  * Title seperator
@@ -32,7 +32,7 @@ $config['template'] = '_templates/blank';
  * The indent method uses DOMDocument which required valid XHTML to work. If you have a malformed
  * document, it will give you a PHP error, so beware.
  */
-$config['format_output'] = (IN_PRODUCTION ? 'compress' : 'none');
+$config['format_output'] = 'none';
 
 /**
  * Default cache behavior when adding a script. If this is set to ture, all scripts you add, will
