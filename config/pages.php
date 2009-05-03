@@ -39,7 +39,7 @@ $config['format_output'] = 'none';
  * automatically be minified together and cached as one file. You can override this at any time by
  * passing true or false as the second parameter when adding a script.
  */
-$config['cache_externals'] = TRUE;
+$config['cache_externals'] = FALSE;
 
 /**
  * CSS url as you would normally use it in HTML
